@@ -12,7 +12,6 @@ spec:
   type: ClusterIP
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,36 +28,41 @@ spec:
         app: condition-service
     spec:
       containers:
-      - name: condition-service
-        image: condition-service:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8001
-        env:
-        - name: DATABASE_URL
-          value: "postgresql://user:password@postgres:5432/condition_db"
-        - name: DEBUG
-          value: "False"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8001
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8001
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
+        - name: condition-service
+          image: condition-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8001
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://user:password@postgres:5432/condition_db"
+            - name: DEBUG
+              value: "False"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
       initContainers:
-      - name: wait-for-postgres
-        image: busybox:1.28
-        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
+        - name: wait-for-postgres
+          image: busybox:1.28
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;",
+            ]

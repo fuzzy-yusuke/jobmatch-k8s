@@ -12,7 +12,6 @@ spec:
   type: ClusterIP
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,45 +28,74 @@ spec:
         app: company-service
     spec:
       containers:
-      - name: company-service
-        image: company-service:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          value: "postgresql://user:password@postgres:5432/company_db"
-        - name: DEBUG
-          value: "False"
-        - name: DJANGO_SETTINGS_MODULE
-          value: "company_service.settings"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8000
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: company-service
+          image: company-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_NAME
+              value: "company_db"
+            - name: DATABASE_USER
+              value: "user"
+            - name: DATABASE_PASSWORD
+              value: "password"
+            - name: DATABASE_HOST
+              value: "postgres"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DEBUG
+              value: "False"
+            - name: DJANGO_SETTINGS_MODULE
+              value: "jobmatch_company_service.settings"
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
       initContainers:
-      - name: wait-for-postgres
-        image: busybox:1.28
-        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
-      - name: run-migrations
-        image: company-service:latest
-        imagePullPolicy: Never
-        env:
-        - name: DATABASE_URL
-          value: "postgresql://user:password@postgres:5432/company_db"
-        command: ["python", "manage.py", "migrate"]
+        - name: wait-for-postgres
+          image: busybox:1.28
+          imagePullPolicy: IfNotPresent
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;",
+            ]
+
+        - name: run-migrations
+          image: company-service:latest
+          imagePullPolicy: Never
+          env:
+            - name: DATABASE_NAME
+              value: "company_db"
+            - name: DATABASE_USER
+              value: "user"
+            - name: DATABASE_PASSWORD
+              value: "password"
+            - name: DATABASE_HOST
+              value: "postgres"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DEBUG
+              value: "False"
+            - name: ALLOWED_HOSTS
+              value: "localhost,127.0.0.1,company-service"
+            - name: SECRET_KEY
+              value: "your-secret-key-here"
+          command: ["python", "manage.py", "migrate"]

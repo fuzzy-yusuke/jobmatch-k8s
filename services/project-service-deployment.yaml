@@ -12,7 +12,6 @@ spec:
   type: ClusterIP
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,38 +28,43 @@ spec:
         app: project-service
     spec:
       containers:
-      - name: project-service
-        image: project-service:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8002
-        env:
-        - name: DATABASE_URL
-          value: "postgresql://user:password@postgres:5432/project_db"
-        - name: DEBUG
-          value: "False"
-        - name: FLASK_ENV
-          value: "production"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8002
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8002
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
+        - name: project-service
+          image: project-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8002
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://user:password@postgres:5432/project_db"
+            - name: DEBUG
+              value: "False"
+            - name: FLASK_ENV
+              value: "production"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
       initContainers:
-      - name: wait-for-postgres
-        image: busybox:1.28
-        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
+        - name: wait-for-postgres
+          image: busybox:1.28
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;",
+            ]
