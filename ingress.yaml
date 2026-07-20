@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jobmatch-ingress
+  namespace: jobmatch
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000
+      - path: /api/companies
+        pathType: Prefix
+        backend:
+          service:
+            name: company-service
+            port:
+              number: 8000
+      - path: /api/conditions
+        pathType: Prefix
+        backend:
+          service:
+            name: condition-service
+            port:
+              number: 8001
+      - path: /api/projects
+        pathType: Prefix
+        backend:
+          service:
+            name: project-service
+            port:
+              number: 8002
